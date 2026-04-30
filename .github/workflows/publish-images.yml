@@ -11,7 +11,7 @@ permissions:
   packages: write
 
 jobs:
-  publish:
+  publish-base-images:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -47,7 +47,7 @@ jobs:
           labels: ${{ steps.meta_local.outputs.labels }}
 
       - name: Extract metadata for Binder base image
-        id: meta_binder
+        id: meta_binder_base
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository_owner }}/clojnder-binder-base
@@ -61,6 +61,42 @@ jobs:
         with:
           context: .
           file: Dockerfile.binder-base
+          push: true
+          tags: ${{ steps.meta_binder_base.outputs.tags }}
+          labels: ${{ steps.meta_binder_base.outputs.labels }}
+
+  publish-binder-image:
+    needs: publish-base-images
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for Binder image
+        id: meta_binder
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/clojnder-binder
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=sha-
+            type=ref,event=tag
+
+      - name: Build and push Binder image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.binder
           push: true
           tags: ${{ steps.meta_binder.outputs.tags }}
           labels: ${{ steps.meta_binder.outputs.labels }}
