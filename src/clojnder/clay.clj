@@ -51,8 +51,7 @@
        :show true
        :browse false
        :browse? false
-       :live-reload true
-       :watch-dirs [base-source-path]})))
+       :live-reload false})))
 
 (defn starter-doc-path [starter-doc]
   (some-> starter-doc io/file .getPath))
