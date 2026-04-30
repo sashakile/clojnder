@@ -13,7 +13,7 @@ RUN for i in 1 2 3 4 5; do \
     exit 1
 COPY --chown=${NB_UID}:${NB_GID} . ${HOME}
 
-RUN python -m pip install --no-cache-dir -e . \
+RUN python -m pip install --no-cache-dir . \
     && chmod +x .binder/start-clay.sh .binder/restart-clay.sh
 
 ENV PATH="${HOME}/.local/bin:${PATH}"

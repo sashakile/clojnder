@@ -77,11 +77,16 @@ def test_plugin_source_exists():
 
 
 def test_plugin_declares_open_command():
-    """ui/src/plugin.ts declares the clay-preview:open command."""
-    plugin_ts = UI_SRC_DIR / "plugin.ts"
-    content = plugin_ts.read_text()
-    assert "clay-preview:open" in content, (
-        "plugin.ts must declare the 'clay-preview:open' command for command palette registration"
+    """clay-preview:open command is declared in plugin.ts or commands.ts."""
+    sources = [
+        (UI_SRC_DIR / "plugin.ts").read_text(),
+        (UI_SRC_DIR / "commands.ts").read_text()
+        if (UI_SRC_DIR / "commands.ts").exists()
+        else "",
+    ]
+    combined = "\n".join(sources)
+    assert "clay-preview:open" in combined, (
+        "clay-preview:open must be declared in plugin.ts or commands.ts"
     )
 
 
@@ -89,3 +94,64 @@ def test_index_source_exists():
     """ui/src/index.ts exports the plugin as the extension entry point."""
     index_ts = UI_SRC_DIR / "index.ts"
     assert index_ts.exists(), f"Missing frontend extension entry point: {index_ts}"
+
+
+# ---------------------------------------------------------------------------
+# clojnder-dnh: Open Clay preview inside JupyterLab
+# ---------------------------------------------------------------------------
+
+
+def test_panel_source_exists():
+    """ui/src/panel.ts exists as the ClayPreviewWidget implementation."""
+    panel_ts = UI_SRC_DIR / "panel.ts"
+    assert panel_ts.exists(), f"Missing panel source: {panel_ts}"
+
+
+def test_panel_declares_clay_preview_widget():
+    """ui/src/panel.ts declares the ClayPreviewWidget class."""
+    panel_ts = UI_SRC_DIR / "panel.ts"
+    content = panel_ts.read_text()
+    assert "ClayPreviewWidget" in content, (
+        "panel.ts must declare ClayPreviewWidget"
+    )
+
+
+def test_panel_has_refresh_method():
+    """ui/src/panel.ts implements a refresh() method."""
+    panel_ts = UI_SRC_DIR / "panel.ts"
+    content = panel_ts.read_text()
+    assert "refresh" in content, "panel.ts must implement a refresh method"
+
+
+def test_commands_source_exists():
+    """ui/src/commands.ts exists with command registration logic."""
+    commands_ts = UI_SRC_DIR / "commands.ts"
+    assert commands_ts.exists(), f"Missing commands source: {commands_ts}"
+
+
+def test_plugin_opens_in_main_area():
+    """The plugin adds the preview widget to JupyterLab's main area shell."""
+    sources = [
+        (UI_SRC_DIR / "plugin.ts").read_text(),
+        (UI_SRC_DIR / "commands.ts").read_text()
+        if (UI_SRC_DIR / "commands.ts").exists()
+        else "",
+    ]
+    combined = "\n".join(sources)
+    assert "shell.add" in combined, (
+        "plugin must call app.shell.add to dock the preview in the main area"
+    )
+
+
+def test_plugin_singleton_guard():
+    """The plugin tracks a single widget instance to avoid duplicate panels."""
+    sources = [
+        (UI_SRC_DIR / "plugin.ts").read_text(),
+        (UI_SRC_DIR / "commands.ts").read_text()
+        if (UI_SRC_DIR / "commands.ts").exists()
+        else "",
+    ]
+    combined = "\n".join(sources)
+    assert "isDisposed" in combined, (
+        "plugin must check widget.isDisposed to implement singleton behaviour"
+    )

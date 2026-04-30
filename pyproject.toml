@@ -12,6 +12,9 @@ dependencies = []
 [project.entry-points."jupyter_serverproxy_servers"]
 clay = "clay_jupyter_proxy:setup_clay"
 
+[project.entry-points."jupyter_labextension"]
+clay_jupyter_proxy = "clay_jupyter_proxy"
+
 [tool.setuptools.packages.find]
 include = ["clay_jupyter_proxy*"]
 

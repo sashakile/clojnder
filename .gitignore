@@ -2,6 +2,10 @@
 ui/node_modules/
 ui/lib/
 ui/*.tsbuildinfo
+ui/.pnp.cjs
+ui/.pnp.loader.mjs
+ui/.yarn/
+ui/package-lock.json
 
 # Python build artifacts
 *.egg-info/

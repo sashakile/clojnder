@@ -32,7 +32,8 @@
   },
   "dependencies": {
     "@jupyterlab/application": "^4.0.0",
-    "@jupyterlab/apputils": "^4.0.0"
+    "@jupyterlab/apputils": "^4.0.0",
+    "@jupyterlab/coreutils": "^6.0.0"
   },
   "devDependencies": {
     "@jupyterlab/builder": "^4.0.0",
@@ -44,7 +45,7 @@
     "outputDir": "../clay_jupyter_proxy/labextension",
     "schemaDir": "schema",
     "_build": {
-      "load": "static/remoteEntry.77c300acd11c681d4e0a.js",
+      "load": "static/remoteEntry.f0fe61e3cba1c1a8a54a.js",
       "extension": "./extension"
     }
   }
