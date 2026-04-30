@@ -88,6 +88,25 @@
       (println "Clay server is still running; fix the file and refresh/restart as needed.")
       :failed)))
 
+(defn render-file! [{:keys [base-source-path source-path base-target-path]}]
+  (println (str "Rendering " source-path))
+  ((requiring-resolve 'scicloj.clay.v2.api/make!)
+   {:base-source-path base-source-path
+    :base-target-path base-target-path
+    :source-path source-path
+    :show true
+    :browse false
+    :browse? false
+    :live-reload false})
+  :rendered)
+
+(defn safe-render-file! [opts]
+  (try
+    (render-file! opts)
+    (catch Throwable t
+      (println (str "File render failed: " (.getMessage t)))
+      :failed)))
+
 (defn start-server! [{:keys [args env-port-var default-port base-source-path starter-doc base-target-path url-prefix]
                       :or {args []
                            default-port 1971

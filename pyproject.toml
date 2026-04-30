@@ -15,6 +15,9 @@ clay = "clay_jupyter_proxy:setup_clay"
 [project.entry-points."jupyter_labextension"]
 clay_jupyter_proxy = "clay_jupyter_proxy"
 
+[project.entry-points."jupyter_server.extension_points"]
+clay_jupyter_proxy = "clay_jupyter_proxy.extension:ClayPreviewExtension"
+
 [tool.setuptools.packages.find]
 include = ["clay_jupyter_proxy*"]
 

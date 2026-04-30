@@ -2,18 +2,25 @@
   (:gen-class)
   (:require [clojnder.clay :as clay]))
 
-(defn -main [& _args]
+(defn- parse-file-arg [args]
+  (some (fn [[flag value]]
+          (when (= flag "--file") value))
+        (partition 2 1 args)))
+
+(defn -main [& args]
   (let [base-source-path (or (System/getenv "CLAY_BASE_PATH") ".")
         base-target-path (or (System/getenv "CLAY_TARGET_PATH") ".clay")
-        starter-doc (or (System/getenv "CLAY_STARTER_DOC") "notebooks/examples.clj")]
+        source-path (or (parse-file-arg args)
+                        (System/getenv "CLAY_STARTER_DOC")
+                        "notebooks/examples.clj")]
     (try
-      (clay/render-starter-doc! {:base-source-path base-source-path
-                                 :base-target-path base-target-path
-                                 :starter-doc starter-doc})
-      (println (str "Rendered starter document: " starter-doc))
+      (clay/safe-render-file! {:base-source-path base-source-path
+                                :base-target-path base-target-path
+                                :source-path source-path})
+      (println (str "Rendered: " source-path))
       (System/exit 0)
       (catch Throwable t
         (binding [*out* *err*]
-          (println (str "Render failed for starter document: " starter-doc))
+          (println (str "Render failed: " source-path))
           (println (.getMessage t)))
         (System/exit 1)))))
