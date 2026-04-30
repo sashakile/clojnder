@@ -1,6 +1,6 @@
 import { IEditorTracker } from '@jupyterlab/fileeditor';
 
-import { renderFile } from './api';
+import { RenderResult, renderFile } from './api';
 
 /**
  * Returns true if the given file path is a Clay source file (.clj).
@@ -59,11 +59,12 @@ export class FollowTracker {
   private _currentFile: string | null = null;
   private _currentWidget: IWatchableWidget | null = null;
   private _onTargetChange: ((path: string | null) => void) | null = null;
+  private _onRenderError: ((result: RenderResult) => void) | null = null;
   private readonly _debouncedRender: (path: string) => void;
 
   constructor(debounceMs = 500) {
     this._debouncedRender = debounce((path: string) => {
-      void renderFile(path);
+      void this._render(path);
     }, debounceMs);
   }
 
@@ -83,6 +84,14 @@ export class FollowTracker {
    */
   onTargetChange(cb: (path: string | null) => void): void {
     this._onTargetChange = cb;
+  }
+
+  /**
+   * Register a callback invoked whenever a render attempt fails.
+   * The full RenderResult (with error/detail/path fields) is passed.
+   */
+  onRenderError(cb: (result: RenderResult) => void): void {
+    this._onRenderError = cb;
   }
 
   /**
@@ -141,7 +150,17 @@ export class FollowTracker {
     this._currentFile = path;
     this._onTargetChange?.(path);
     if (path !== null) {
-      void renderFile(path);
+      void this._render(path);
+    }
+  }
+
+  /**
+   * Render the given path and propagate failures to the onRenderError callback.
+   */
+  private async _render(path: string): Promise<void> {
+    const result = await renderFile(path);
+    if (!result.ok && this._onRenderError !== null) {
+      this._onRenderError(result);
     }
   }
 }

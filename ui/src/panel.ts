@@ -15,6 +15,7 @@ export class ClayPreviewWidget extends MainAreaWidget<IFrame> {
   private _followMode = false;
   private readonly _followButton: ToolbarButton;
   private readonly _fileLabel: Widget;
+  private readonly _errorOverlay: HTMLElement;
 
   constructor() {
     const iframe = new IFrame({
@@ -52,6 +53,27 @@ export class ClayPreviewWidget extends MainAreaWidget<IFrame> {
     this.toolbar.addItem('file', this._fileLabel);
 
     this._clayUrl = PageConfig.getBaseUrl() + 'clay/';
+
+    // Error overlay — sits on top of the iframe, hidden by default.
+    this._errorOverlay = document.createElement('div');
+    this._errorOverlay.style.cssText = [
+      'display:none',
+      'position:absolute',
+      'inset:0',
+      'z-index:100',
+      'background:var(--jp-layout-color1,#fff)',
+      'color:var(--jp-ui-font-color1,#111)',
+      'padding:16px',
+      'overflow:auto',
+      'font-family:var(--jp-code-font-family,monospace)',
+      'font-size:var(--jp-code-font-size,13px)',
+      'white-space:pre-wrap',
+      'word-break:break-all'
+    ].join(';');
+    // Append after super() so `this.node` is ready.
+    this.node.style.position = 'relative';
+    this.node.appendChild(this._errorOverlay);
+
     this._load();
   }
 
@@ -66,6 +88,22 @@ export class ClayPreviewWidget extends MainAreaWidget<IFrame> {
     this._fileLabel.node.title = path
       ? `Targeted: ${path}`
       : 'Currently targeted Clay file';
+  }
+
+  /**
+   * Show an error overlay with the failed file path and detail message.
+   * The iframe remains loaded underneath so the user can dismiss or retry.
+   */
+  showError(path: string, detail: string): void {
+    const header = path ? `Render failed: ${path}\n\n` : 'Render failed\n\n';
+    this._errorOverlay.textContent = header + (detail || '(no detail available)');
+    this._errorOverlay.style.display = 'block';
+  }
+
+  /** Hide the error overlay (e.g. after a successful re-render or explicit retry). */
+  clearError(): void {
+    this._errorOverlay.style.display = 'none';
+    this._errorOverlay.textContent = '';
   }
 
   /** Callback invoked when follow mode is toggled by the toolbar button. */
@@ -86,6 +124,7 @@ export class ClayPreviewWidget extends MainAreaWidget<IFrame> {
   }
 
   refresh(): void {
+    this.clearError();
     // Blank then restore forces an iframe reload even when URL is unchanged.
     this.content.url = '';
     this.content.url = this._clayUrl;

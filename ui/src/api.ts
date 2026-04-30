@@ -23,7 +23,12 @@ export async function getStatus(): Promise<ClayStatus> {
 
 export interface RenderResult {
   ok: boolean;
+  /** Human-readable error label (e.g. "render failed"). */
   error?: string;
+  /** Full output from the Clojure process; shown in the error overlay. */
+  detail?: string;
+  /** The file path that was being rendered when the error occurred. */
+  path?: string;
 }
 
 /**
@@ -38,12 +43,16 @@ export async function renderFile(path: string): Promise<RenderResult> {
       body: JSON.stringify({ path })
     });
     if (!response.ok) {
-      const body = await response.json().catch(() => ({}));
-      return { ok: false, error: (body as { error?: string }).error };
+      const body = (await response.json().catch(() => ({}))) as {
+        error?: string;
+        detail?: string;
+        path?: string;
+      };
+      return { ok: false, error: body.error, detail: body.detail, path: body.path ?? path };
     }
-    return { ok: true };
+    return { ok: true, path };
   } catch {
-    return { ok: false, error: 'Network error' };
+    return { ok: false, error: 'Network error', path };
   }
 }
 

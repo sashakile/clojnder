@@ -100,6 +100,15 @@ function _wireFollowTracker(
   followTracker.onTargetChange((path) => {
     if (widget && !widget.isDisposed) {
       widget.setTargetFile(path);
+      // A target change (new file focused) resets any prior error state.
+      widget.clearError();
+    }
+  });
+
+  // Tracker → error overlay
+  followTracker.onRenderError((result) => {
+    if (widget && !widget.isDisposed) {
+      widget.showError(result.path ?? '', result.detail ?? result.error ?? '');
     }
   });
 

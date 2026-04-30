@@ -62,6 +62,7 @@ class RenderHandler(RequestHandler):
                 json.dumps(
                     {
                         "error": "render failed",
+                        "path": source_path,
                         "detail": result.stderr or result.stdout,
                     }
                 )

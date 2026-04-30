@@ -225,3 +225,60 @@ class TestRenderHandler(AsyncHTTPTestCase):
             )
         ct = resp.headers.get("Content-Type", "")
         assert "application/json" in ct
+
+    def test_render_failure_error_field_present(self):
+        """Error response must include 'error' key at top level."""
+        with patch("clay_jupyter_proxy.handlers.subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(returncode=1, stdout="", stderr="bad syntax")
+            resp = self.fetch(
+                "/clay-preview/render",
+                method="POST",
+                body=json.dumps({"path": "notebooks/foo.clj"}),
+                headers={"Content-Type": "application/json"},
+            )
+        assert resp.code == 500
+        body = json.loads(resp.body)
+        assert body.get("error") == "render failed"
+
+    def test_render_failure_detail_contains_stderr(self):
+        """detail field must surface stderr so the UI can display it."""
+        with patch("clay_jupyter_proxy.handlers.subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(
+                returncode=1, stdout="", stderr="Syntax error: unexpected EOF"
+            )
+            resp = self.fetch(
+                "/clay-preview/render",
+                method="POST",
+                body=json.dumps({"path": "notebooks/foo.clj"}),
+                headers={"Content-Type": "application/json"},
+            )
+        body = json.loads(resp.body)
+        assert "Syntax error" in body.get("detail", "")
+
+    def test_render_failure_detail_falls_back_to_stdout(self):
+        """If stderr is empty, detail should fall back to stdout."""
+        with patch("clay_jupyter_proxy.handlers.subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(
+                returncode=1, stdout="Some stdout error", stderr=""
+            )
+            resp = self.fetch(
+                "/clay-preview/render",
+                method="POST",
+                body=json.dumps({"path": "notebooks/foo.clj"}),
+                headers={"Content-Type": "application/json"},
+            )
+        body = json.loads(resp.body)
+        assert "Some stdout error" in body.get("detail", "")
+
+    def test_render_failure_response_includes_path(self):
+        """Error response should echo back the path to aid UI display."""
+        with patch("clay_jupyter_proxy.handlers.subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(returncode=1, stdout="", stderr="oops")
+            resp = self.fetch(
+                "/clay-preview/render",
+                method="POST",
+                body=json.dumps({"path": "notebooks/foo.clj"}),
+                headers={"Content-Type": "application/json"},
+            )
+        body = json.loads(resp.body)
+        assert body.get("path") == "notebooks/foo.clj"
