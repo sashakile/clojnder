@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "clay-jupyter-proxy"
+version = "0.1.0"
+description = "Jupyter Server Proxy launcher for a Clay/Clojure session on Binder"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.entry-points."jupyter_serverproxy_servers"]
+clay = "clay_jupyter_proxy:setup_clay"
+
+[tool.setuptools.packages.find]
+include = ["clay_jupyter_proxy*"]

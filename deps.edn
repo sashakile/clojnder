@@ -1,0 +1,21 @@
+{:paths ["src" "examples"]
+ :mvn/repos {"clojars" {:url "https://repo.clojars.org/"}}
+ :aliases
+ {:clay-deps
+  {:extra-deps {org.scicloj/clay {:mvn/version "2.0.16"}}}
+
+  :clay-local
+  {:extra-deps {org.scicloj/clay {:mvn/version "2.0.16"}}
+   :main-opts ["-m" "clojnder.local"]}
+
+  :clay-render
+  {:extra-deps {org.scicloj/clay {:mvn/version "2.0.16"}}
+   :main-opts ["-m" "clojnder.render"]}
+
+  :clay-check
+  {:extra-deps {org.scicloj/clay {:mvn/version "2.0.16"}}
+   :main-opts ["-m" "clojnder.check"]}
+
+  :clay-binder
+  {:extra-deps {org.scicloj/clay {:mvn/version "2.0.16"}}
+   :main-opts ["-m" "clojnder.binder"]}}}
