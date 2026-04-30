@@ -1,6 +1,8 @@
 import { IFrame, MainAreaWidget, ToolbarButton } from '@jupyterlab/apputils';
 import { PageConfig } from '@jupyterlab/coreutils';
 
+import { createRestartButton } from './toolbar';
+
 /**
  * Clay Preview widget — embeds the proxied Clay app in the main area.
  *
@@ -25,6 +27,8 @@ export class ClayPreviewWidget extends MainAreaWidget<IFrame> {
         tooltip: 'Refresh Clay Preview'
       })
     );
+
+    this.toolbar.addItem('restart', createRestartButton(() => this.refresh()));
 
     this._clayUrl = PageConfig.getBaseUrl() + 'clay/';
     this._load();

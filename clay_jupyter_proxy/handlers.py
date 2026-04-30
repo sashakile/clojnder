@@ -1,10 +1,11 @@
-"""Tornado request handler for the Clay render endpoint."""
+"""Tornado request handlers for Clay preview endpoints."""
 
 import json
 import subprocess
 
 from tornado.web import RequestHandler
 
+from .manager import ClayStatus, get_clay_status, restart_clay
 from .validate import validate_render_path
 
 
@@ -68,3 +69,32 @@ class RenderHandler(RequestHandler):
             return
 
         self.finish(json.dumps({"status": "ok", "path": source_path}))
+
+
+class StatusHandler(RequestHandler):
+    """GET /clay-preview/api/status — return Clay process liveness."""
+
+    def set_default_headers(self) -> None:
+        self.set_header("Content-Type", "application/json")
+
+    def get(self) -> None:
+        status: ClayStatus = get_clay_status()
+        self.finish(json.dumps({"status": status.status, "pids": status.pids}))
+
+
+class RestartHandler(RequestHandler):
+    """POST /clay-preview/api/restart — kill Clay and return updated status.
+
+    The Clay process will be restarted by jupyter-server-proxy on the next
+    request to /clay/.
+    """
+
+    def initialize(self, restart_script: str) -> None:
+        self._restart_script = restart_script
+
+    def set_default_headers(self) -> None:
+        self.set_header("Content-Type", "application/json")
+
+    def post(self) -> None:
+        status: ClayStatus = restart_clay(self._restart_script)
+        self.finish(json.dumps({"status": status.status, "pids": status.pids}))

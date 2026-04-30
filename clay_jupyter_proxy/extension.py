@@ -4,7 +4,11 @@ import os
 
 from jupyter_server.extension.application import ExtensionApp
 
-from .handlers import RenderHandler
+from .handlers import RenderHandler, RestartHandler, StatusHandler
+
+_DEFAULT_RESTART_SCRIPT = os.path.join(
+    os.path.expanduser("~"), ".binder", "restart-clay.sh"
+)
 
 
 class ClayPreviewExtension(ExtensionApp):
@@ -14,10 +18,19 @@ class ClayPreviewExtension(ExtensionApp):
         workspace_root = os.environ.get(
             "CLAY_BASE_PATH", os.path.expanduser("~")
         )
+        restart_script = os.environ.get(
+            "CLAY_RESTART_SCRIPT", _DEFAULT_RESTART_SCRIPT
+        )
         self.handlers = [
             (
                 "/clay-preview/render",
                 RenderHandler,
                 {"workspace_root": workspace_root},
-            )
+            ),
+            ("/clay-preview/api/status", StatusHandler),
+            (
+                "/clay-preview/api/restart",
+                RestartHandler,
+                {"restart_script": restart_script},
+            ),
         ]

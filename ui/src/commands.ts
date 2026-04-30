@@ -1,6 +1,7 @@
 import { JupyterFrontEnd } from '@jupyterlab/application';
 import { ICommandPalette } from '@jupyterlab/apputils';
 
+import { requestRestart } from './api';
 import { ClayPreviewWidget } from './panel';
 
 let widget: ClayPreviewWidget | null = null;
@@ -33,5 +34,22 @@ export function registerCommands(
 
   if (palette) {
     palette.addItem({ command, category: 'Clay' });
+  }
+
+  const restartCommand = 'clay-preview:restart';
+
+  app.commands.addCommand(restartCommand, {
+    label: 'Clay Preview: Restart',
+    caption: 'Restart the Clay preview server',
+    execute: async () => {
+      await requestRestart();
+      if (widget && !widget.isDisposed) {
+        widget.refresh();
+      }
+    }
+  });
+
+  if (palette) {
+    palette.addItem({ command: restartCommand, category: 'Clay' });
   }
 }
