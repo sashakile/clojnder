@@ -164,19 +164,55 @@ You can also try the proxy route directly once Jupyter is running:
 
 If you change `clay_jupyter_proxy/__init__.py`, rebuild the Binder image before retrying.
 
-## Clay Preview roadmap
+## Clay Preview extension
 
-Maintainer-approved v1 preview defaults are recorded in [`docs/clay-preview-v1-policy.md`](docs/clay-preview-v1-policy.md).
+The package also ships a JupyterLab extension skeleton that proves extension packaging and command registration as a first tracer bullet.
 
-Highlights:
+### What's included
 
-- scope is limited to `notebooks/*.clj`
+- **Python server extension**: the existing `jupyter_serverproxy_servers` Clay launcher (unchanged)
+- **JupyterLab frontend plugin**: registered via the `clay-jupyter-proxy` labextension
+- **Command palette**: **Clay Preview: Open** command (accessible from the JupyterLab command palette)
+- **Automated tests**: `tests/test_extension.py` covers package import, Clay launcher preservation, labextension metadata, and command registration
+
+### Installing locally
+
+```sh
+pip install .
+jupyter labextension list   # should show: clay-jupyter-proxy v0.1.0 enabled OK
+```
+
+Open JupyterLab, press `Ctrl+Shift+C` (or `Cmd+Shift+C`) to open the command palette, and search for **Clay Preview**.
+
+> **Skeleton status**: This first slice proves extension discovery and command registration. Full file-targeted preview rendering is implemented in a later slice. See [`docs/clay-preview-v1-policy.md`](docs/clay-preview-v1-policy.md) for approved product defaults.
+
+### Building the frontend after source changes
+
+```sh
+cd ui
+npm install
+npx tsc                            # compile TypeScript to lib/
+jupyter labextension build .       # bundle to clay_jupyter_proxy/labextension/static/
+cd ..
+pip install .                      # reinstall to update share/jupyter/labextensions/
+```
+
+### Running tests
+
+```sh
+pip install pytest
+python3 -m pytest tests/ -v
+```
+
+### v1 preview defaults
+
+Maintainer-approved defaults are in [`docs/clay-preview-v1-policy.md`](docs/clay-preview-v1-policy.md):
+
+- scope: `notebooks/*.clj`
 - preview opens in a split main-area tab
 - preview does not auto-open on startup
 - `followActiveFile` defaults to `false`
 - `renderOnSave` defaults to `true`
-
-Implementation slices should cite that policy document directly when building the JupyterLab preview.
 
 ## Notes
 

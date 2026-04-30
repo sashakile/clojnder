@@ -1,3 +1,16 @@
+# Node / frontend build artifacts
+ui/node_modules/
+ui/lib/
+ui/*.tsbuildinfo
+
+# Python build artifacts
+*.egg-info/
+dist/
+build/
+__pycache__/
+*.pyc
+.pytest_cache/
+
 pom.xml
 pom.xml.asc
 *.jar

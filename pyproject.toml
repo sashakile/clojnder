@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "clay-jupyter-proxy"
 version = "0.1.0"
-description = "Jupyter Server Proxy launcher for a Clay/Clojure session on Binder"
+description = "Jupyter Server Proxy launcher and Clay Preview JupyterLab extension for Clojure/Clay on Binder"
 requires-python = ">=3.11"
 dependencies = []
 
@@ -14,3 +14,6 @@ clay = "clay_jupyter_proxy:setup_clay"
 
 [tool.setuptools.packages.find]
 include = ["clay_jupyter_proxy*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
