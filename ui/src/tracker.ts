@@ -10,16 +10,62 @@ export function isClaySourceFile(path: string): boolean {
 }
 
 /**
+ * Returns a debounced version of `fn` that waits `ms` milliseconds after the
+ * last call before invoking `fn`. Exposed for unit testing.
+ */
+export function debounce<T extends unknown[]>(
+  fn: (...args: T) => void,
+  ms: number
+): (...args: T) => void {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  return (...args: T): void => {
+    if (timer !== null) {
+      clearTimeout(timer);
+    }
+    timer = setTimeout(() => {
+      timer = null;
+      fn(...args);
+    }, ms);
+  };
+}
+
+/** Minimal shape of a JupyterLab document widget needed by FollowTracker. */
+interface IWatchableWidget {
+  context: {
+    path: string;
+    fileChanged: {
+      connect(
+        handler: (sender: unknown, args: unknown) => void,
+        thisArg?: unknown
+      ): boolean;
+      disconnect(
+        handler: (sender: unknown, args: unknown) => void,
+        thisArg?: unknown
+      ): boolean;
+    };
+  };
+}
+
+/**
  * Manages "follow mode" — re-renders the Clay preview whenever the user
- * switches to a supported editor file.
+ * switches to a supported editor file, and automatically re-renders when
+ * the targeted file is saved (debounced).
  *
  * Call `activate()` once with an IEditorTracker, then toggle follow mode
- * on/off at will. Dispose of the tracker to release the signal connection.
+ * on/off at will. Dispose of the tracker to release the signal connections.
  */
 export class FollowTracker {
   private _followMode = false;
   private _currentFile: string | null = null;
+  private _currentWidget: IWatchableWidget | null = null;
   private _onTargetChange: ((path: string | null) => void) | null = null;
+  private readonly _debouncedRender: (path: string) => void;
+
+  constructor(debounceMs = 500) {
+    this._debouncedRender = debounce((path: string) => {
+      void renderFile(path);
+    }, debounceMs);
+  }
 
   /** True when follow mode is active. */
   get followMode(): boolean {
@@ -53,6 +99,7 @@ export class FollowTracker {
         // Unsupported file — do not retarget
         return;
       }
+      this._connectSaveWatcher(widget as IWatchableWidget | null);
       this._updateTarget(path);
     });
   }
@@ -60,6 +107,34 @@ export class FollowTracker {
   /** Enable or disable follow mode. */
   setFollowMode(enabled: boolean): void {
     this._followMode = enabled;
+  }
+
+  /**
+   * Swap the save-event watcher to a new document widget.
+   * Disconnects from the previous widget (if any) and connects to the new one.
+   */
+  private _connectSaveWatcher(widget: IWatchableWidget | null): void {
+    if (this._currentWidget !== null) {
+      this._currentWidget.context.fileChanged.disconnect(
+        this._onFileSaved,
+        this
+      );
+    }
+    this._currentWidget = widget;
+    if (widget !== null) {
+      widget.context.fileChanged.connect(this._onFileSaved, this);
+    }
+  }
+
+  /**
+   * Invoked by the Lumino signal when the targeted file is saved or reverted.
+   * Triggers a debounced rerender of the Clay preview.
+   */
+  private _onFileSaved(): void {
+    if (!this._followMode || this._currentFile === null) {
+      return;
+    }
+    this._debouncedRender(this._currentFile);
   }
 
   private _updateTarget(path: string | null): void {
