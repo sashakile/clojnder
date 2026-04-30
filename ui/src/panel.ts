@@ -1,4 +1,5 @@
 import { IFrame, MainAreaWidget, ToolbarButton } from '@jupyterlab/apputils';
+import { Widget } from '@lumino/widgets';
 import { PageConfig } from '@jupyterlab/coreutils';
 
 import { createRestartButton } from './toolbar';
@@ -10,6 +11,11 @@ import { createRestartButton } from './toolbar';
  * by start-clay.sh when the container launches.
  */
 export class ClayPreviewWidget extends MainAreaWidget<IFrame> {
+  private readonly _clayUrl: string;
+  private _followMode = false;
+  private readonly _followButton: ToolbarButton;
+  private readonly _fileLabel: Widget;
+
   constructor() {
     const iframe = new IFrame({
       sandbox: ['allow-same-origin', 'allow-scripts', 'allow-forms']
@@ -30,11 +36,50 @@ export class ClayPreviewWidget extends MainAreaWidget<IFrame> {
 
     this.toolbar.addItem('restart', createRestartButton(() => this.refresh()));
 
+    this._followButton = new ToolbarButton({
+      label: 'Follow: off',
+      onClick: () => this._toggleFollow(),
+      tooltip: 'Toggle follow-active-file mode'
+    });
+    this.toolbar.addItem('follow', this._followButton);
+
+    // Plain widget used as a read-only label showing the targeted file.
+    this._fileLabel = new Widget();
+    this._fileLabel.node.title = 'Currently targeted Clay file';
+    this._fileLabel.node.style.cssText =
+      'display:flex;align-items:center;padding:0 6px;font-size:var(--jp-ui-font-size1);opacity:0.7;';
+    this._fileLabel.node.textContent = '—';
+    this.toolbar.addItem('file', this._fileLabel);
+
     this._clayUrl = PageConfig.getBaseUrl() + 'clay/';
     this._load();
   }
 
-  private readonly _clayUrl: string;
+  /** True when follow-active-file mode is on. */
+  get followMode(): boolean {
+    return this._followMode;
+  }
+
+  /** Update the toolbar to show which file is currently targeted. */
+  setTargetFile(path: string | null): void {
+    this._fileLabel.node.textContent = path ?? '—';
+    this._fileLabel.node.title = path
+      ? `Targeted: ${path}`
+      : 'Currently targeted Clay file';
+  }
+
+  /** Callback invoked when follow mode is toggled by the toolbar button. */
+  onFollowModeChange: ((enabled: boolean) => void) | null = null;
+
+  _toggleFollow(): void {
+    this._followMode = !this._followMode;
+    // Update the button label directly via its DOM node.
+    const span = this._followButton.node.querySelector('span');
+    if (span) {
+      span.textContent = `Follow: ${this._followMode ? 'on' : 'off'}`;
+    }
+    this.onFollowModeChange?.(this._followMode);
+  }
 
   private _load(): void {
     this.content.url = this._clayUrl;

@@ -1,29 +1,36 @@
 import { JupyterFrontEnd } from '@jupyterlab/application';
 import { ICommandPalette } from '@jupyterlab/apputils';
+import { IEditorTracker } from '@jupyterlab/fileeditor';
 
 import { requestRestart } from './api';
 import { ClayPreviewWidget } from './panel';
+import { FollowTracker } from './tracker';
 
 let widget: ClayPreviewWidget | null = null;
 
 /**
- * Register the clay-preview:open command and add it to the palette.
+ * Register Clay Preview commands and add them to the palette.
  *
- * The command implements a singleton: re-invoking it focuses the existing
- * panel rather than opening a second one.
+ * - clay-preview:open        — singleton panel (focus if already open)
+ * - clay-preview:restart     — restart Clay server, then refresh panel
+ * - clay-preview:toggle-follow — enable/disable follow-active-file mode
  */
 export function registerCommands(
   app: JupyterFrontEnd,
-  palette: ICommandPalette | null
+  palette: ICommandPalette | null,
+  followTracker: FollowTracker,
+  editorTracker: IEditorTracker | null
 ): void {
-  const command = 'clay-preview:open';
+  // ── Open ────────────────────────────────────────────────────────────────
+  const openCommand = 'clay-preview:open';
 
-  app.commands.addCommand(command, {
+  app.commands.addCommand(openCommand, {
     label: 'Clay Preview: Open',
     caption: 'Open Clay Preview panel',
     execute: () => {
       if (!widget || widget.isDisposed) {
         widget = new ClayPreviewWidget();
+        _wireFollowTracker(followTracker, editorTracker);
       }
       if (!widget.isAttached) {
         app.shell.add(widget, 'main');
@@ -33,9 +40,10 @@ export function registerCommands(
   });
 
   if (palette) {
-    palette.addItem({ command, category: 'Clay' });
+    palette.addItem({ command: openCommand, category: 'Clay' });
   }
 
+  // ── Restart ─────────────────────────────────────────────────────────────
   const restartCommand = 'clay-preview:restart';
 
   app.commands.addCommand(restartCommand, {
@@ -51,5 +59,52 @@ export function registerCommands(
 
   if (palette) {
     palette.addItem({ command: restartCommand, category: 'Clay' });
+  }
+
+  // ── Toggle follow ────────────────────────────────────────────────────────
+  const followCommand = 'clay-preview:toggle-follow';
+
+  app.commands.addCommand(followCommand, {
+    label: 'Clay Preview: Toggle Follow Active File',
+    caption: 'Follow the currently active .clj file in the preview',
+    execute: () => {
+      if (widget && !widget.isDisposed) {
+        widget._toggleFollow();
+      }
+    }
+  });
+
+  if (palette) {
+    palette.addItem({ command: followCommand, category: 'Clay' });
+  }
+}
+
+/**
+ * Wire the FollowTracker to the panel widget and the editor tracker.
+ * Called once when the panel is first created.
+ */
+function _wireFollowTracker(
+  followTracker: FollowTracker,
+  editorTracker: IEditorTracker | null
+): void {
+  if (!widget || widget.isDisposed) {
+    return;
+  }
+
+  // Panel toggle button → tracker
+  widget.onFollowModeChange = (enabled: boolean) => {
+    followTracker.setFollowMode(enabled);
+  };
+
+  // Tracker → panel label
+  followTracker.onTargetChange((path) => {
+    if (widget && !widget.isDisposed) {
+      widget.setTargetFile(path);
+    }
+  });
+
+  // Connect to JupyterLab editor tracker if available
+  if (editorTracker) {
+    followTracker.activate(editorTracker);
   }
 }
