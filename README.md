@@ -73,6 +73,7 @@ just binder    # build the Binder image locally
 - `Dockerfile.binder-base` — published GHCR base image for Binder/Jupyter runtime
 - `.binder/Dockerfile` — thin Binder image layered on top of the published base
 - `.binder/start-clay.sh` — Binder launcher command used by Jupyter Server Proxy
+- `.binder/restart-clay.sh` — helper script to restart the Clay subprocess inside a running Binder pod
 - `clay_jupyter_proxy/__init__.py` — registers a **Clay** button in Jupyter
 - `deps.edn` — defines `:clay-local` and `:clay-binder`
 - `src/clojnder/clay.clj` — shared Clay startup logic
@@ -124,6 +125,22 @@ In JupyterLab:
 
 If the launcher tile remains flaky, `just binder-clay` is a practical workaround: Jupyter still runs underneath, but the initial page opens at `/clay` directly.
 
+### Binder process lifecycle note
+
+A running Binder pod can keep an old Clay subprocess alive even after repo files are updated. That means you may see stale Clay output in `/clay` while the file browser shows newer notebook contents.
+
+Best practice:
+
+1. launch a fresh Binder session for a new test
+2. prefer direct `urlpath=clay` links when sharing
+3. if you stay in the same Binder pod, restart Clay from a terminal:
+
+```sh
+.binder/restart-clay.sh
+```
+
+Then reload `/clay`.
+
 If the **Clay** launcher does not appear or clicking it does nothing, inspect the Binder image interactively:
 
 ```sh
@@ -153,5 +170,6 @@ If you change `clay_jupyter_proxy/__init__.py`, rebuild the Binder image before 
 - Starter document render failures are now non-fatal: Clay stays up and logs the error instead of crashing the whole server.
 - `just check` validates the starter doc syntax, and `just render` renders it once for a fast smoke test.
 - Binder startup now patches Clay's generated HTML for the `/clay` proxy prefix so polling and bundled assets work through Jupyter Server Proxy.
+- `notebooks/examples.clj` includes a visible starter version marker so stale Binder sessions are easier to spot.
 - Docker builds prefetch Clay dependencies, with retries, because Clojars can occasionally return transient 503 errors.
 - `.binder/Dockerfile` now starts from a published GHCR Binder base image, so Binder only layers repo-specific files and dependency refreshes on top.

@@ -3,6 +3,7 @@
  [:h1 "Clay examples"]
  [:p "A small starter notebook inspired by the Clay book examples."]
  [:p "This page is served by Clay through the local container or Binder proxy."]
+ [:p [:strong "Starter version:"] " 2026-04-30 / Binder examples default"]
  [:p "Try editing " [:code "notebooks/examples.clj"] " and refreshing."]]
 
 ^{:kind/hiccup true}
