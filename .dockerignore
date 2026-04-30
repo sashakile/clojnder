@@ -1,0 +1,42 @@
+# Git metadata
+.git/
+.github/
+
+# Node / frontend build artifacts (198MB+, not needed at runtime)
+ui/node_modules/
+ui/lib/
+ui/*.tsbuildinfo
+ui/.yarn/
+ui/package-lock.json
+ui/yarn.lock
+
+# Python caches and build artifacts
+**/__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+dist/
+build/
+
+# Clojure caches
+.cpcache/
+
+# Dev / agent tooling
+.beads/
+.wai/
+.claude/
+.clay/
+
+# Tests (not needed at runtime)
+tests/
+
+# Docs
+docs/
+
+# Dev-only config and files
+Dockerfile.local
+Dockerfile.binder-base
+justfile
+AGENTS.md
+CLAUDE.md
+openspec/
