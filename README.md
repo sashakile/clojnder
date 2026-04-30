@@ -1,6 +1,6 @@
 # clojnder
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/sashakile/clojnder/main?urlpath=clay)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/sashakile/clojnder/main?urlpath=lab/tree/notebooks/examples.clj)
 
 Clay/Clojure workspace with a local container workflow first, then Binder integration.
 
@@ -90,7 +90,7 @@ just binder    # build the Binder image locally
 
 Launch Binder directly into Clay:
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/sashakile/clojnder/main?urlpath=clay)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/sashakile/clojnder/main?urlpath=lab/tree/notebooks/examples.clj)
 
 Or point Binder at this repository. After JupyterLab opens:
 
