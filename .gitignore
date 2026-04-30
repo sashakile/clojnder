@@ -14,6 +14,9 @@ pom.xml.asc
 .cpcache/
 .clay/
 docs/
+!docs/
+!docs/*.md
+docs/notebooks/
 
 # Beads / Dolt files (added by bd init)
 .dolt/

@@ -164,6 +164,20 @@ You can also try the proxy route directly once Jupyter is running:
 
 If you change `clay_jupyter_proxy/__init__.py`, rebuild the Binder image before retrying.
 
+## Clay Preview roadmap
+
+Maintainer-approved v1 preview defaults are recorded in [`docs/clay-preview-v1-policy.md`](docs/clay-preview-v1-policy.md).
+
+Highlights:
+
+- scope is limited to `notebooks/*.clj`
+- preview opens in a split main-area tab
+- preview does not auto-open on startup
+- `followActiveFile` defaults to `false`
+- `renderOnSave` defaults to `true`
+
+Implementation slices should cite that policy document directly when building the JupyterLab preview.
+
 ## Notes
 
 - The proxy is modeled after the usual Binder pattern used for sidecar notebook servers like Pluto: Jupyter stays the front door, and `jupyter-server-proxy` exposes the app on an internal Binder port.
