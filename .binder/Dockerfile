@@ -1,4 +1,5 @@
-FROM ghcr.io/sashakile/clojnder-binder:latest
+ARG BINDER_IMAGE=ghcr.io/sashakile/clojnder-binder:latest
+FROM ${BINDER_IMAGE}
 
 USER root
 RUN apt-get update && apt-get install -y --no-install-recommends \

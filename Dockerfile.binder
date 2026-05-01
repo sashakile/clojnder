@@ -1,4 +1,5 @@
-FROM ghcr.io/sashakile/clojnder-binder-base:latest
+ARG BINDER_BASE_IMAGE=ghcr.io/sashakile/clojnder-binder-base:latest
+FROM ${BINDER_BASE_IMAGE}
 
 USER ${NB_UID}
 WORKDIR /home/jovyan

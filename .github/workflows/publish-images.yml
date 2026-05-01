@@ -92,11 +92,26 @@ jobs:
             type=sha,prefix=sha-
             type=ref,event=tag
 
+      - name: Resolve deterministic Binder base image tag
+        id: binder_base_ref
+        env:
+          GHCR_OWNER: ${{ github.repository_owner }}
+        run: |
+          owner="${GHCR_OWNER,,}"
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            tag="${GITHUB_REF_NAME}"
+          else
+            tag="sha-${GITHUB_SHA}"
+          fi
+          echo "image=ghcr.io/${owner}/clojnder-binder-base:${tag}" >> "$GITHUB_OUTPUT"
+
       - name: Build and push Binder image
         uses: docker/build-push-action@v6
         with:
           context: .
           file: Dockerfile.binder
           push: true
+          build-args: |
+            BINDER_BASE_IMAGE=${{ steps.binder_base_ref.outputs.image }}
           tags: ${{ steps.meta_binder.outputs.tags }}
           labels: ${{ steps.meta_binder.outputs.labels }}
