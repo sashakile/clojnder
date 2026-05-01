@@ -5,10 +5,13 @@ Verifies:
 - Package import and existing Clay launcher preservation (server proxy entrypoint)
 - JupyterLab extension discovery metadata (labextension/package.json, install.json)
 - Clay Preview open command declared in frontend plugin source
+- Server handlers are registered under Jupyter's base_url
 """
 
 import json
 from pathlib import Path
+
+from jupyter_server.utils import url_path_join
 
 PACKAGE_ROOT = Path(__file__).parent.parent
 LABEXTENSION_DIR = PACKAGE_ROOT / "clay_jupyter_proxy" / "labextension"
@@ -94,6 +97,19 @@ def test_index_source_exists():
     """ui/src/index.ts exports the plugin as the extension entry point."""
     index_ts = UI_SRC_DIR / "index.ts"
     assert index_ts.exists(), f"Missing frontend extension entry point: {index_ts}"
+
+
+def test_handler_specs_use_base_url_prefix():
+    """Preview handlers must be rooted under the configured Jupyter base_url."""
+    from clay_jupyter_proxy.extension import _handler_specs
+
+    base_url = "/user/example-session/"
+    specs = _handler_specs(base_url, "/workspace", "/tmp/restart-clay.sh")
+    routes = [spec[0] for spec in specs]
+
+    assert url_path_join(base_url, "clay-preview", "render") in routes
+    assert url_path_join(base_url, "clay-preview", "api", "status") in routes
+    assert url_path_join(base_url, "clay-preview", "api", "restart") in routes
 
 
 # ---------------------------------------------------------------------------
