@@ -1,4 +1,5 @@
 import { IEditorTracker } from '@jupyterlab/fileeditor';
+import { IDocumentWidget } from '@jupyterlab/docregistry';
 
 import { RenderResult, renderFile } from './api';
 
@@ -33,13 +34,13 @@ export function debounce<T extends unknown[]>(
 interface IWatchableWidget {
   context: {
     path: string;
-    fileChanged: {
+    saveState: {
       connect(
-        handler: (sender: unknown, args: unknown) => void,
+        handler: (sender: unknown, state: string) => void,
         thisArg?: unknown
       ): boolean;
       disconnect(
-        handler: (sender: unknown, args: unknown) => void,
+        handler: (sender: unknown, state: string) => void,
         thisArg?: unknown
       ): boolean;
     };
@@ -61,6 +62,7 @@ export class FollowTracker {
   private _onTargetChange: ((path: string | null) => void) | null = null;
   private _onRenderError: ((result: RenderResult) => void) | null = null;
   private readonly _debouncedRender: (path: string) => void;
+  private _editorTracker: IEditorTracker | null = null;
 
   constructor(debounceMs = 500) {
     this._debouncedRender = debounce((path: string) => {
@@ -99,13 +101,17 @@ export class FollowTracker {
    * Should be called once after construction.
    */
   activate(editorTracker: IEditorTracker): void {
+    this._editorTracker = editorTracker;
+    console.log('[ClayTracker] activated');
     editorTracker.currentChanged.connect((_tracker, widget) => {
+      const path = widget?.context?.path ?? null;
+      console.log(`[ClayTracker] editor switched to: ${path ?? '(none)'}, followMode=${this._followMode}`);
       if (!this._followMode) {
         return;
       }
-      const path = widget?.context?.path ?? null;
       if (path !== null && !isClaySourceFile(path)) {
         // Unsupported file — do not retarget
+        console.log(`[ClayTracker] ignoring non-.clj file: ${path}`);
         return;
       }
       this._connectSaveWatcher(widget as IWatchableWidget | null);
@@ -116,6 +122,18 @@ export class FollowTracker {
   /** Enable or disable follow mode. */
   setFollowMode(enabled: boolean): void {
     this._followMode = enabled;
+    console.log(`[ClayTracker] follow mode ${enabled ? 'enabled' : 'disabled'}`);
+    if (enabled && this._editorTracker !== null) {
+      // Immediately pick up the current widget so the user doesn't have to
+      // switch editors after toggling follow mode on.
+      const widget = this._editorTracker.currentWidget as IDocumentWidget | null;
+      const path = widget?.context?.path ?? null;
+      console.log(`[ClayTracker] setFollowMode: current widget path=${path ?? '(none)'}`);
+      if (path !== null && isClaySourceFile(path)) {
+        this._connectSaveWatcher(widget as unknown as IWatchableWidget);
+        this._updateTarget(path);
+      }
+    }
   }
 
   /**
@@ -124,14 +142,18 @@ export class FollowTracker {
    */
   private _connectSaveWatcher(widget: IWatchableWidget | null): void {
     if (this._currentWidget !== null) {
-      this._currentWidget.context.fileChanged.disconnect(
+      console.log(`[ClayTracker] disconnecting save watcher from: ${this._currentWidget.context.path}`);
+      this._currentWidget.context.saveState.disconnect(
         this._onFileSaved,
         this
       );
     }
     this._currentWidget = widget;
     if (widget !== null) {
-      widget.context.fileChanged.connect(this._onFileSaved, this);
+      console.log(`[ClayTracker] connecting save watcher to: ${widget.context.path}`);
+      widget.context.saveState.connect(this._onFileSaved, this);
+    } else {
+      console.log('[ClayTracker] no widget to connect save watcher to');
     }
   }
 
@@ -139,7 +161,11 @@ export class FollowTracker {
    * Invoked by the Lumino signal when the targeted file is saved or reverted.
    * Triggers a debounced rerender of the Clay preview.
    */
-  private _onFileSaved(): void {
+  private _onFileSaved(_sender: unknown, state: string): void {
+    console.log(`[ClayTracker] saveState=${state}, followMode=${this._followMode}, currentFile=${this._currentFile ?? '(none)'}`);
+    if (state !== 'completed') {
+      return;
+    }
     if (!this._followMode || this._currentFile === null) {
       return;
     }
@@ -147,6 +173,7 @@ export class FollowTracker {
   }
 
   private _updateTarget(path: string | null): void {
+    console.log(`[ClayTracker] target updated: ${path ?? '(none)'}`);
     this._currentFile = path;
     this._onTargetChange?.(path);
     if (path !== null) {
@@ -158,9 +185,15 @@ export class FollowTracker {
    * Render the given path and propagate failures to the onRenderError callback.
    */
   private async _render(path: string): Promise<void> {
+    console.log(`[ClayTracker] rendering: ${path}`);
     const result = await renderFile(path);
-    if (!result.ok && this._onRenderError !== null) {
-      this._onRenderError(result);
+    if (result.ok) {
+      console.log(`[ClayTracker] render succeeded: ${path}`);
+    } else {
+      console.warn(`[ClayTracker] render failed: ${path}`, result);
+      if (this._onRenderError !== null) {
+        this._onRenderError(result);
+      }
     }
   }
 }

@@ -166,14 +166,45 @@ If you change `clay_jupyter_proxy/__init__.py`, rebuild the Binder image before 
 
 ## Clay Preview extension
 
-The package also ships a JupyterLab extension skeleton that proves extension packaging and command registration as a first tracer bullet.
+The `clay-jupyter-proxy` JupyterLab extension brings Clay rendering directly into a split panel inside JupyterLab, with automatic rerender on save, follow mode, and process status/restart controls.
 
 ### What's included
 
-- **Python server extension**: the existing `jupyter_serverproxy_servers` Clay launcher (unchanged)
-- **JupyterLab frontend plugin**: registered via the `clay-jupyter-proxy` labextension
-- **Command palette**: **Clay Preview: Open** command (accessible from the JupyterLab command palette)
-- **Automated tests**: `tests/test_extension.py` covers package import, Clay launcher preservation, labextension metadata, and command registration
+- **Python server extension**: REST endpoints for render, status, and restart
+- **JupyterLab frontend plugin**: split-panel preview, toolbar, and command palette integration
+- **Rerender on save**: the targeted file is re-rendered automatically whenever it is saved (500 ms debounce)
+- **Follow mode**: when enabled, the preview tracks whichever supported editor file is active
+- **Status indicator**: toolbar shows whether Clay is running or stopped
+- **Restart button**: restart the Clay subprocess from the preview toolbar without leaving JupyterLab
+- **Error display**: render failures surface as a message inside the preview panel
+
+### Opening the preview
+
+In JupyterLab, press `Ctrl+Shift+C` (or `Cmd+Shift+C`) to open the command palette and search for **Clay Preview: Open**. The panel docks in a split main area tab.
+
+### Rerender on save
+
+With a `notebooks/*.clj` file open in the editor, saving the file triggers an automatic rerender of the Clay preview. No manual steps needed — the preview updates in place after each save.
+
+### Follow mode
+
+By default the preview targets the file you opened it against. Enable follow mode from the toolbar to have the preview automatically retarget whenever you switch to a different supported editor file. Rerender still happens on save, not on every tab switch.
+
+### Restart and recovery
+
+If Clay gets into a bad state, use the **Restart** button in the preview panel's toolbar. The button re-runs `.binder/restart-clay.sh` and refreshes the status indicator. You can also restart from a terminal:
+
+```sh
+.binder/restart-clay.sh
+```
+
+Then reload the Clay frame or trigger a rerender by saving the source file.
+
+### Known limitations
+
+- v1 preview scope is limited to `notebooks/*.clj` — arbitrary repo `.clj` files are not targeted in this release
+- Follow mode defaults to `false`; tab switches alone do not trigger rerenders
+- See [`docs/clay-preview-v1-policy.md`](docs/clay-preview-v1-policy.md) for full policy details
 
 ### Installing locally
 
@@ -182,9 +213,14 @@ pip install .
 jupyter labextension list   # should show: clay-jupyter-proxy v0.1.0 enabled OK
 ```
 
-Open JupyterLab, press `Ctrl+Shift+C` (or `Cmd+Shift+C`) to open the command palette, and search for **Clay Preview**.
+### Using the preview in Binder
 
-> **Skeleton status**: This first slice proves extension discovery and command registration. Full file-targeted preview rendering is implemented in a later slice. See [`docs/clay-preview-v1-policy.md`](docs/clay-preview-v1-policy.md) for approved product defaults.
+The Binder image ships the extension pre-installed. After launching:
+
+1. Open the command palette (`Ctrl+Shift+C`) and run **Clay Preview: Open**.
+2. Open `notebooks/examples.clj` in the editor.
+3. Save the file — the preview rerenders automatically.
+4. If the Clay status indicator shows **stopped**, click **Restart** in the toolbar.
 
 ### Building the frontend after source changes
 
@@ -203,16 +239,6 @@ pip install .                      # reinstall to update share/jupyter/labextens
 pip install pytest
 python3 -m pytest tests/ -v
 ```
-
-### v1 preview defaults
-
-Maintainer-approved defaults are in [`docs/clay-preview-v1-policy.md`](docs/clay-preview-v1-policy.md):
-
-- scope: `notebooks/*.clj`
-- preview opens in a split main-area tab
-- preview does not auto-open on startup
-- `followActiveFile` defaults to `false`
-- `renderOnSave` defaults to `true`
 
 ## Notes
 

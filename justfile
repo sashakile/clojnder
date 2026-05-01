@@ -77,6 +77,10 @@ bb: build
 binder:
     docker build -f .binder/Dockerfile -t {{image_name}}-binder .
 
+# Build Binder image from local source (does not require a published GHCR image)
+binder-local:
+    docker build -f Dockerfile.binder -t {{image_name}}-binder .
+
 binder-serve: binder
     docker run --rm -p 8888:8888 \
       -e CLAY_BASE_PATH=/home/jovyan \

@@ -1,5 +1,11 @@
 import { PageConfig } from '@jupyterlab/coreutils';
 
+function xsrfHeaders(): Record<string, string> {
+  const match = document.cookie.match(/(?:^|;\s*)_xsrf=([^;]+)/);
+  const token = match ? decodeURIComponent(match[1]) : '';
+  return token ? { 'X-XSRFToken': token } : {};
+}
+
 export interface ClayStatus {
   status: 'running' | 'stopped' | 'error';
   pids: string[];
@@ -39,7 +45,7 @@ export async function renderFile(path: string): Promise<RenderResult> {
   try {
     const response = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...xsrfHeaders() },
       body: JSON.stringify({ path })
     });
     if (!response.ok) {
@@ -62,7 +68,7 @@ export async function renderFile(path: string): Promise<RenderResult> {
 export async function requestRestart(): Promise<ClayStatus> {
   const url = PageConfig.getBaseUrl() + 'clay-preview/api/restart';
   try {
-    const response = await fetch(url, { method: 'POST' });
+    const response = await fetch(url, { method: 'POST', headers: xsrfHeaders() });
     if (!response.ok) {
       return { status: 'error', pids: [] };
     }

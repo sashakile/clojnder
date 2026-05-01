@@ -13,5 +13,12 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Build Binder image
-        run: docker build -f .binder/Dockerfile .
+      - name: Build Binder image from local source
+        run: docker build -f Dockerfile.binder -t clojnder-clay-binder .
+
+      - name: Run packaging smoke tests inside Binder image
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}/tests:/home/jovyan/tests:ro" \
+            clojnder-clay-binder \
+            bash -c "pip install --quiet pytest && python -m pytest tests/test_packaging.py -v"

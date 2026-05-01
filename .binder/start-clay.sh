@@ -7,4 +7,4 @@ export CLAY_BASE_PATH="${CLAY_BASE_PATH:-$HOME}"
 export CLAY_STARTER_DOC="${CLAY_STARTER_DOC:-notebooks/examples.clj}"
 export CLAY_URL_PREFIX="${CLAY_URL_PREFIX:-/clay}"
 
-exec clojure -M:clay-binder --port "$PORT"
+exec clojure -J-Djava.awt.headless=true -M:clay-binder --port "$PORT"

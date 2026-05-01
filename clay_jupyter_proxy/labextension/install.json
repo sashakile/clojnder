@@ -1,5 +1,0 @@
-{
-  "packageManager": "python",
-  "packageName": "clay-jupyter-proxy",
-  "uninstallInstructions": "Use your Python package manager (pip, conda, etc.) with the name of the Python package containing this labextension."
-}

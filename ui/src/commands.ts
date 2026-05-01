@@ -116,4 +116,7 @@ function _wireFollowTracker(
   if (editorTracker) {
     followTracker.activate(editorTracker);
   }
+
+  // Auto-enable follow mode so the panel tracks the active file immediately.
+  followTracker.setFollowMode(true);
 }

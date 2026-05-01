@@ -12,7 +12,7 @@ import { createRestartButton } from './toolbar';
  */
 export class ClayPreviewWidget extends MainAreaWidget<IFrame> {
   private readonly _clayUrl: string;
-  private _followMode = false;
+  private _followMode = true;
   private readonly _followButton: ToolbarButton;
   private readonly _fileLabel: Widget;
   private readonly _errorOverlay: HTMLElement;
@@ -38,7 +38,7 @@ export class ClayPreviewWidget extends MainAreaWidget<IFrame> {
     this.toolbar.addItem('restart', createRestartButton(() => this.refresh()));
 
     this._followButton = new ToolbarButton({
-      label: 'Follow: off',
+      label: 'Follow: on',
       onClick: () => this._toggleFollow(),
       tooltip: 'Toggle follow-active-file mode'
     });
