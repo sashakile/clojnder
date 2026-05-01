@@ -16,6 +16,7 @@ RUN for i in 1 2 3 4 5; do \
 # Layer 2: install Python package (cached until package source changes)
 COPY --chown=${NB_UID}:${NB_GID} pyproject.toml setup.py ${HOME}/
 COPY --chown=${NB_UID}:${NB_GID} clay_jupyter_proxy/ ${HOME}/clay_jupyter_proxy/
+COPY --chown=${NB_UID}:${NB_GID} jupyter-config/ ${HOME}/jupyter-config/
 RUN python -m pip install --no-cache-dir .
 
 # Layer 3: copy remaining project files (.dockerignore excludes build artifacts)
