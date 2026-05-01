@@ -14,6 +14,7 @@ RUN for i in 1 2 3 4 5; do \
     exit 1
 
 # Layer 2: install Python package (cached until package source changes)
+# All files needed by setup.py must be copied together so Docker cache invalidates correctly
 COPY --chown=${NB_UID}:${NB_GID} pyproject.toml setup.py ${HOME}/
 COPY --chown=${NB_UID}:${NB_GID} clay_jupyter_proxy/ ${HOME}/clay_jupyter_proxy/
 COPY --chown=${NB_UID}:${NB_GID} jupyter-config/ ${HOME}/jupyter-config/

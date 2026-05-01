@@ -89,6 +89,15 @@ binder-serve: binder
       {{image_name}}-binder \
       start-notebook.py --IdentityProvider.token='' --ServerApp.default_url=/lab/tree/notebooks/examples.clj
 
+# Build from local source and run (bypasses published GHCR image)
+binder-local-serve: binder-local
+    docker run --rm -p 8888:8888 \
+      -e CLAY_BASE_PATH=/home/jovyan \
+      -e CLAY_TARGET_PATH=/home/jovyan/.clay \
+      -e CLAY_STARTER_DOC={{starter_doc}} \
+      {{image_name}}-binder \
+      start-notebook.py --IdentityProvider.token='' --ServerApp.default_url=/lab/tree/notebooks/examples.clj
+
 binder-clay: binder
     docker run --rm -p 8888:8888 \
       -e CLAY_BASE_PATH=/home/jovyan \
