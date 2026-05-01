@@ -101,7 +101,7 @@ jobs:
           if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
             tag="${GITHUB_REF_NAME}"
           else
-            tag="sha-${GITHUB_SHA}"
+            tag="sha-${GITHUB_SHA::7}"
           fi
           echo "image=ghcr.io/${owner}/clojnder-binder-base:${tag}" >> "$GITHUB_OUTPUT"
 
