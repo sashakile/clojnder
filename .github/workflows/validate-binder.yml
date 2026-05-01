@@ -16,6 +16,38 @@ jobs:
       - name: Build Binder image from local source
         run: docker build -f Dockerfile.binder -t clojnder-clay-binder .
 
+      - name: Verify labextension compatibility inside Binder image
+        run: |
+          docker run --rm \
+            clojnder-clay-binder \
+            bash -lc "jupyter labextension list 2>&1 | tee /tmp/labextensions.txt && grep -E 'clay-jupyter-proxy .*OK' /tmp/labextensions.txt"
+
+      - name: Verify Clay preview routes are registered inside Binder image
+        run: |
+          cid=$(docker run -d -p 8888:8888 \
+            -e CLAY_BASE_PATH=/home/jovyan \
+            -e CLAY_TARGET_PATH=/home/jovyan/.clay \
+            -e CLAY_STARTER_DOC=notebooks/examples.clj \
+            clojnder-clay-binder \
+            start-notebook.py --IdentityProvider.token='')
+          trap 'docker rm -f "$cid"' EXIT
+          for i in $(seq 1 60); do
+            if curl -sf -c /tmp/clay.cookies http://127.0.0.1:8888/lab >/dev/null; then
+              break
+            fi
+            sleep 2
+          done
+          xsrf=$(awk '$6=="_xsrf"{print $7}' /tmp/clay.cookies | tail -n1)
+          status=$(curl -sS -o /tmp/clay-render-response.json -w '%{http_code}' \
+            -b /tmp/clay.cookies \
+            -H "X-XSRFToken: $xsrf" \
+            -H 'Content-Type: application/json' \
+            -X POST \
+            --data '{"path":"../etc/passwd"}' \
+            http://127.0.0.1:8888/clay-preview/render)
+          test "$status" = "400"
+          grep -F '"error":' /tmp/clay-render-response.json
+
       - name: Run packaging smoke tests inside Binder image
         run: |
           docker run --rm \
