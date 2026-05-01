@@ -61,6 +61,7 @@ export class FollowTracker {
   private _currentWidget: IWatchableWidget | null = null;
   private _onTargetChange: ((path: string | null) => void) | null = null;
   private _onRenderError: ((result: RenderResult) => void) | null = null;
+  private _onRenderSuccess: ((path: string) => void) | null = null;
   private readonly _debouncedRender: (path: string) => void;
   private _editorTracker: IEditorTracker | null = null;
 
@@ -94,6 +95,13 @@ export class FollowTracker {
    */
   onRenderError(cb: (result: RenderResult) => void): void {
     this._onRenderError = cb;
+  }
+
+  /**
+   * Register a callback invoked after each successful render.
+   */
+  onRenderSuccess(cb: (path: string) => void): void {
+    this._onRenderSuccess = cb;
   }
 
   /**
@@ -189,6 +197,7 @@ export class FollowTracker {
     const result = await renderFile(path);
     if (result.ok) {
       console.log(`[ClayTracker] render succeeded: ${path}`);
+      this._onRenderSuccess?.(path);
     } else {
       console.warn(`[ClayTracker] render failed: ${path}`, result);
       if (this._onRenderError !== null) {

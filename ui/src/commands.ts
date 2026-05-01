@@ -112,6 +112,14 @@ function _wireFollowTracker(
     }
   });
 
+  // Tracker → panel refresh on successful render
+  followTracker.onRenderSuccess(() => {
+    if (widget && !widget.isDisposed) {
+      widget.clearError();
+      widget.refresh();
+    }
+  });
+
   // Connect to JupyterLab editor tracker if available
   if (editorTracker) {
     followTracker.activate(editorTracker);

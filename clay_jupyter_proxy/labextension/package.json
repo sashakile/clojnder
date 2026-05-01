@@ -46,7 +46,7 @@
     "outputDir": "../clay_jupyter_proxy/labextension",
     "schemaDir": "schema",
     "_build": {
-      "load": "static/remoteEntry.1217395e1c48171379f7.js",
+      "load": "static/remoteEntry.d4851d6ee3b7f39ae341.js",
       "extension": "./extension"
     }
   }
