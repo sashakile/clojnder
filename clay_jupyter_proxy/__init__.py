@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from .extension import _load_jupyter_server_extension  # noqa: F401
+
 HERE = Path(__file__).parent.resolve()
 
 
