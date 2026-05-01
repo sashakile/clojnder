@@ -111,12 +111,12 @@ just binder-url
 
 The Binder build now uses `.binder/Dockerfile` as a thin layer on top of a published GHCR base image:
 
-- default: `ghcr.io/sashakile/clojnder-binder-base:latest`
+- `.binder/Dockerfile` is pinned to an immutable GHCR image digest for deterministic BinderHub builds
 - deterministic tags are also published for each image:
   - `sha-<git-commit>` on normal pushes
   - `v<version>` on release tag pushes
 
-The CI publish workflow builds `Dockerfile.binder` against the matching deterministic Binder base tag, so image-to-image deploys do not float on `latest`.
+The CI publish workflow builds `Dockerfile.binder` against the matching deterministic Binder base tag, and the committed BinderHub Dockerfile pins an immutable digest instead of floating on `latest`.
 
 Or skip JupyterLab as the landing page and open Clay directly:
 

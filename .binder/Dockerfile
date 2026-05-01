@@ -1,4 +1,6 @@
-ARG BINDER_IMAGE=ghcr.io/sashakile/clojnder-binder:latest
+# Pinned to immutable GHCR digest for deterministic BinderHub builds.
+# Corresponds to ghcr.io/sashakile/clojnder-binder:sha-80a7860
+ARG BINDER_IMAGE=ghcr.io/sashakile/clojnder-binder@sha256:c737fc303928aaf026592643a3ecf4747ae5d187da586e25342a67c96c0b6384
 FROM ${BINDER_IMAGE}
 
 USER root
