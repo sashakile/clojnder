@@ -11,7 +11,12 @@ from setuptools import setup
 LABEXT_DIR = os.path.join("clay_jupyter_proxy", "labextension")
 LABEXT_TARGET = os.path.join("share", "jupyter", "labextensions", "clay-jupyter-proxy")
 
-data_files = []
+data_files = [
+    (
+        os.path.join("etc", "jupyter", "jupyter_server_config.d"),
+        [os.path.join("jupyter-config", "jupyter_server_config.d", "clay_jupyter_proxy.json")],
+    ),
+]
 for dirpath, _dirnames, filenames in os.walk(LABEXT_DIR):
     if filenames:
         rel = os.path.relpath(dirpath, LABEXT_DIR)
